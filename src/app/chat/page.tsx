@@ -31,20 +31,11 @@ import {
 function Chat() {
   const [input, setInput] = useState<string>('');
 
-  const { messages, setMessages, sendMessage, status } = useChat({
+  const { messages, setMessages, sendMessage, status, ...props } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/chat',
     }),
   });
-
-  useEffect(() => {
-    const fetchMessages = async () => {
-      const res = await fetch('/api/chat');
-      const data = await res.json();
-      setMessages([...data]);
-    };
-    fetchMessages();
-  }, [setMessages]);
 
   const handleSubmit = async () => {
     if (!input.trim()) return;
@@ -52,6 +43,8 @@ function Chat() {
     sendMessage({ text: input });
     setInput('');
   };
+
+  console.log('#### messages ####', messages, props)
 
   return (
     <div className="w-full p-6 relative size-full h-screen">
@@ -103,11 +96,14 @@ function Chat() {
         <PromptInput onSubmit={handleSubmit} className="mt-20">
           <PromptInputBody>
             <PromptInputTextarea
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => { 
+                setInput(e.target.value) 
+                console.log('## input ##', e);
+              }}
               className="md:leading-10"
               value={input}
               placeholder="Type your message..."
-              disabled={status !== 'ready'}
+              disabled={status === 'streaming'}
             />
           </PromptInputBody>
         </PromptInput>
