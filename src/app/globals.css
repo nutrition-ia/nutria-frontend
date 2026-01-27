@@ -4,6 +4,14 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* Cores Nutria - use: bg-nutria-verde, text-nutria-bordo, etc */
+  --color-nutria-verde: var(--nutria-verde);
+  --color-nutria-laranja: var(--nutria-laranja);
+  --color-nutria-bege: var(--nutria-bege);
+  --color-nutria-vermelho: var(--nutria-vermelho);
+  --color-nutria-bordo: var(--nutria-bordo);
+  --color-nutria-creme: var(--nutria-creme);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -48,21 +56,31 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
+
+  /* 🎨 Paleta Nutria */
+  --nutria-verde: #9AAD54;
+  --nutria-laranja: #E88C1F;
+  --nutria-bege: #F2DFD0;
+  --nutria-vermelho: #B81C1C;
+  --nutria-bordo: #5C1010;
+  --nutria-creme: #F5F1EB;
+
+  /* Cores do sistema usando paleta Nutria */
+  --background: #F5F1EB;
+  --foreground: #5C1010;
+  --card: #FFFFFF;
+  --card-foreground: #5C1010;
+  --popover: #FFFFFF;
+  --popover-foreground: #5C1010;
+  --primary: #5C1010;
+  --primary-foreground: #F5F1EB;
+  --secondary: #F2DFD0;
+  --secondary-foreground: #5C1010;
+  --muted: #F2DFD0;
+  --muted-foreground: #7A5C5C;
+  --accent: #9AAD54;
+  --accent-foreground: #FFFFFF;
+  --destructive: #B81C1C;
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
