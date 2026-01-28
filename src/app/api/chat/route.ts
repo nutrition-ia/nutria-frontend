@@ -7,15 +7,30 @@ const RESOURCE_ID = 'weather-chat'; // replace by user id
 function parseAISDKToMastra(params:  any) {
   const messages = params.messages?.map((msg: any) => ({
     role: msg.role,
-    content: msg.parts?.map((part: any) => ({
-      type: part.type,
-      text: part.text
-    })) || []
+    content: msg.parts?.map((part: any) => {
+      if(part.type === "file"){
+        console.log('📎 File detected:', {
+          type: part.type,
+          mediaType: part.mediaType,
+          filename: part.filename,
+          dataLength: part.url?.length || 0
+        });
+        return{
+          type: part.type,
+          data: part.url,  // AI SDK expects "data" field, not "url"
+          mediaType: part.mediaType
+        };
+      }
+     return {
+        type: part.type,
+        text: part.text
+      };
+    }) || []
   })) || [];
 
   return {
     id: params.id || crypto.randomUUID(),
-    messages, 
+    messages,
     trigger: params.trigger || "submit-message"
   };
 }
@@ -26,6 +41,14 @@ export async function POST(req: Request) {
   try {
     // @TODO: add nutri-ia agent to backend :)
     const mastraPayload = parseAISDKToMastra(params);
+
+    console.log('🚀 Sending to Mastra:', JSON.stringify({
+      messageCount: mastraPayload.messages?.length,
+      messages: mastraPayload.messages?.map((m: { role: string; content?: { type: string }[] }) => ({
+        role: m.role,
+        contentTypes: m.content?.map((c: { type: string }) => c.type)
+      }))
+    }, null, 2));
 
     const response = await fetch(`${MASTRA_API_URL}/chat`, {
       method: 'POST',
