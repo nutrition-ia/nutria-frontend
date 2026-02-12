@@ -11,6 +11,7 @@ import {
   TrendingUp,
   Settings,
   Menu,
+  ClipboardList,
 } from 'lucide-react';
 import { useSession } from '@/lib/auth-client';
 
@@ -19,6 +20,11 @@ const menuItems = [
     label: 'chat',
     icon: MessageSquare,
     href: '/chat',
+  },
+  {
+    label: 'dietas',
+    icon: ClipboardList,
+    href: '/dietas',
   },
   {
     label: 'receitas',
