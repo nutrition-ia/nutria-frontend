@@ -1,4 +1,6 @@
 import { betterAuth } from "better-auth";
+import { jwt } from "better-auth/plugins";
+import { randomUUID } from "crypto";
 import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
@@ -53,6 +55,9 @@ export const auth = betterAuth({
   },
 
   advanced: {
+    database: {
+      generateId: () => randomUUID(),
+    },
     useSecureCookies: process.env.NODE_ENV === "production",
     cookieOptions: {
       httpOnly: true,
@@ -67,4 +72,25 @@ export const auth = betterAuth({
     window: 60,
     max: 10,
   },
+
+  plugins: [
+    jwt({
+      jwks: {
+        keyPairConfig: {
+          alg: "EdDSA",
+          crv: "Ed25519",
+        },
+      },
+      jwt: {
+        issuer: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+        audience: "nutria",
+        expirationTime: "15m",
+        definePayload: ({ user }) => ({
+          sub: user.id,
+          email: user.email,
+          name: user.name,
+        }),
+      },
+    }),
+  ],
 });
