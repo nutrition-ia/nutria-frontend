@@ -1,12 +1,13 @@
 import { createAuthClient } from "better-auth/react";
+import { jwtClient } from "better-auth/client/plugins";
 
 /**
  * Cliente do Better Auth para o frontend Next.js
- * Agora usa as rotas locais do Next.js (/api/auth/*)
- * Esta é a abordagem recomendada pelo Better Auth
+ * Usa JWT plugin para gerar tokens que são validados por backend e catalog
  */
 export const authClient = createAuthClient({
   baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  plugins: [jwtClient()],
 });
 
 // Hooks e funções exportadas para uso nos componentes
