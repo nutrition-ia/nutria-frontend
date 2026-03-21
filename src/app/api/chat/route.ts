@@ -1,26 +1,7 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 
 const MASTRA_API_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4111";
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-
-/**
- * Obtém um JWT do Better Auth para repassar aos serviços backend.
- * O JWT é gerado server-side usando a sessão do cookie.
- */
-async function getJwtToken(cookieHeader: string): Promise<string | null> {
-  try {
-    const response = await fetch(`${APP_URL}/api/auth/token`, {
-      headers: { cookie: cookieHeader },
-    });
-    if (!response.ok) return null;
-    const data = await response.json();
-    return data.token || null;
-  } catch {
-    return null;
-  }
-}
 
 function parseAISDKToMastra(params: any) {
   const messages =
@@ -53,18 +34,9 @@ export async function POST(req: Request) {
   const params = await req.json();
 
   try {
-    const session = await auth.api.getSession({ headers: req.headers });
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const cookieHeader = req.headers.get("cookie") || "";
-    const token = await getJwtToken(cookieHeader);
+    const token = req.headers.get("Authorization");
     if (!token) {
-      return NextResponse.json(
-        { error: "Failed to generate auth token" },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const mastraPayload = parseAISDKToMastra(params);
@@ -72,7 +44,7 @@ export async function POST(req: Request) {
     const headers: HeadersInit = {
       "Content-Type": "application/json",
       accept: "text/event-stream",
-      Authorization: `Bearer ${token}`,
+      Authorization: token,
     };
 
     const response = await fetch(`${MASTRA_API_URL}/chat`, {
@@ -109,22 +81,21 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   try {
-    const session = await auth.api.getSession({ headers: req.headers });
-    if (!session?.user) {
+    const token = req.headers.get("Authorization");
+    if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = session.user.id;
-
-    const cookieHeader = req.headers.get("cookie") || "";
-    const token = await getJwtToken(cookieHeader);
+    // Extract userId from JWT payload (base64 decode the payload part)
+    const jwtPayload = JSON.parse(
+      Buffer.from(token.replace("Bearer ", "").split(".")[1], "base64url").toString(),
+    );
+    const userId = jwtPayload.sub;
 
     const headers: HeadersInit = {
       "Content-Type": "application/json",
+      Authorization: token,
     };
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
 
     const response = await fetch(
       `${MASTRA_API_URL}/agents/nutri-ia/memory?threadId=chat-${userId}&resourceId=${userId}`,
