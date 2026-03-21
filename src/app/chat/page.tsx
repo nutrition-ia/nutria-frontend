@@ -5,8 +5,9 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { DefaultChatTransport, ToolUIPart, FileUIPart } from 'ai';
 import { useChat } from '@ai-sdk/react';
-import { ImageIcon, Paperclip, Camera, ArrowRight } from 'lucide-react';
+import { Paperclip, Camera, ArrowUp, Leaf, Sparkles, BookOpen, Target } from 'lucide-react';
 import { useSession } from '@/lib/auth-client';
+import { useJwt } from '@/lib/jwt-context';
 
 import {
   PromptInput,
@@ -31,32 +32,37 @@ import {
 } from '@/components/ai-elements/tool';
 
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 
-// Cards de sugestão da tela inicial
 const suggestionCards = [
   {
-    icon: '🍳',
-    title: 'Receitas saudáveis',
+    icon: Sparkles,
+    title: 'Receitas saudaveis',
     description: 'Encontre receitas nutritivas e deliciosas para seu dia a dia',
+    color: 'from-nutria-verde/10 to-nutria-verde/5',
+    iconColor: 'text-nutria-verde',
   },
   {
-    icon: '📊',
-    title: 'Análise nutricional',
-    description: 'Descubra informações nutricionais dos seus alimentos',
+    icon: BookOpen,
+    title: 'Analise nutricional',
+    description: 'Descubra informacoes nutricionais dos seus alimentos',
+    color: 'from-nutria-laranja/10 to-nutria-laranja/5',
+    iconColor: 'text-nutria-laranja',
   },
   {
-    icon: '🎯',
+    icon: Target,
     title: 'Planeje suas metas',
     description: 'Crie um plano alimentar personalizado para seus objetivos',
+    color: 'from-nutria-bordo/10 to-nutria-bordo/5',
+    iconColor: 'text-nutria-bordo',
   },
 ];
 
 function Chat() {
   const router = useRouter();
   const { data: session, isPending } = useSession();
+  const { token } = useJwt();
   const [input, setInput] = useState<string>('');
   const [attachments, setAttachments] = useState<FileUIPart[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -66,23 +72,18 @@ function Chat() {
     transport: new DefaultChatTransport({
       api: '/api/chat',
       headers: () => {
-        // Envia user_id no header para o backend identificar o usuário
         const headers: Record<string, string> = {};
-        if (session?.user?.id) {
-          headers['X-User-Id'] = session.user.id;
-          headers['X-User-Email'] = session.user.email || '';
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
         }
         return headers;
       },
     }),
   });
 
-  // Verifica autenticação apenas uma vez após carregamento
   useEffect(() => {
     if (!isPending && !session && redirectAttempts === 0) {
-      console.log('Sem sessão, redirecionando para login...');
       setRedirectAttempts(1);
-      // Usa timeout para evitar loop
       setTimeout(() => {
         router.push('/login');
       }, 100);
@@ -134,7 +135,6 @@ function Chat() {
   };
 
   const handleNewConversation = () => {
-    // Implementar lógica de nova conversa (limpar histórico, etc)
     window.location.reload();
   };
 
@@ -142,32 +142,23 @@ function Chat() {
     setInput(suggestion);
   };
 
-  // Debug: log do estado da sessão
-  useEffect(() => {
-    console.log('Estado da sessão:', { isPending, hasSession: !!session, session });
-  }, [isPending, session]);
-
-  // Mostrar loading enquanto verifica autenticação
   if (isPending) {
     return (
       <div className="h-screen flex items-center justify-center bg-nutria-creme">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-nutria-verde flex items-center justify-center animate-pulse">
-            <span className="text-3xl">🥗</span>
+        <div className="flex flex-col items-center gap-4 animate-fade-in">
+          <div className="w-14 h-14 rounded-2xl bg-nutria-verde flex items-center justify-center animate-pulse-soft">
+            <Leaf className="w-8 h-8 text-white" />
           </div>
-          <div className="text-nutria-bordo">Verificando autenticação...</div>
+          <p className="text-sm text-nutria-bordo/50">Verificando autenticacao...</p>
         </div>
       </div>
     );
   }
 
-  // Não renderizar se não estiver autenticado (será redirecionado)
   if (!session) {
     return (
       <div className="h-screen flex items-center justify-center bg-nutria-creme">
-        <div className="flex flex-col items-center gap-4">
-          <div className="text-nutria-bordo">Redirecionando para login...</div>
-        </div>
+        <p className="text-sm text-nutria-bordo/50 animate-fade-in">Redirecionando...</p>
       </div>
     );
   }
@@ -176,55 +167,51 @@ function Chat() {
 
   return (
     <div className="flex h-screen bg-nutria-creme">
-      {/* Sidebar */}
       <Sidebar />
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
         <Header onNewConversation={handleNewConversation} />
 
-        {/* Chat Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {!hasMessages ? (
-            // Tela inicial (sem mensagens)
-            <div className="flex-1 flex flex-col items-center justify-center p-6 max-w-4xl mx-auto w-full">
-              {/* Logo e mensagem de boas-vindas */}
-              <div className="mb-12 text-center">
-                <div className="w-24 h-24 rounded-3xl bg-nutria-verde flex items-center justify-center mx-auto mb-6">
-                  <span className="text-5xl">🥗</span>
+            /* Tela de boas-vindas */
+            <div className="flex-1 flex flex-col items-center justify-center p-6 max-w-3xl mx-auto w-full">
+              <div className="mb-14 text-center animate-slide-up">
+                <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-nutria-verde to-nutria-verde-light flex items-center justify-center mx-auto mb-6 shadow-lg shadow-nutria-verde/20">
+                  <Leaf className="w-10 h-10 text-white" />
                 </div>
-                <h1 className="text-3xl font-bold text-nutria-bordo mb-3">
-                  Olá! Como posso ajudar com sua nutrição?
+                <h1 className="heading-serif text-3xl text-nutria-bordo mb-3">
+                  Como posso ajudar hoje?
                 </h1>
-                <p className="text-nutria-bordo/70 max-w-2xl mx-auto">
-                  Sou seu assistente especializado em nutrição e bem-estar. Posso
-                  ajudar com receitas saudáveis, planejamento de refeições,
-                  informações nutricionais e muito mais.
+                <p className="text-nutria-bordo/50 max-w-lg mx-auto leading-relaxed">
+                  Sou seu assistente de nutricao. Pergunte sobre receitas,
+                  planejamento alimentar ou envie uma foto para analise.
                 </p>
               </div>
 
-              {/* Cards de sugestão */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mb-12">
-                {suggestionCards.map((card, index) => (
-                  <Card
-                    key={index}
-                    className="p-6 cursor-pointer hover:shadow-md transition-shadow bg-white border-nutria-verde/20"
-                    onClick={() => handleSuggestionClick(card.description)}
-                  >
-                    <div className="text-3xl mb-3">{card.icon}</div>
-                    <h3 className="font-semibold text-nutria-bordo mb-2">
-                      {card.title}
-                    </h3>
-                    <p className="text-sm text-nutria-bordo/70">
-                      {card.description}
-                    </p>
-                  </Card>
-                ))}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+                {suggestionCards.map((card, index) => {
+                  const Icon = card.icon;
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick(card.description)}
+                      className={`p-5 rounded-2xl bg-gradient-to-br ${card.color} border border-white/60 text-left transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 animate-slide-up opacity-0 stagger-${index + 1}`}
+                    >
+                      <Icon className={`w-5 h-5 ${card.iconColor} mb-3`} />
+                      <h3 className="font-semibold text-nutria-bordo text-sm mb-1.5">
+                        {card.title}
+                      </h3>
+                      <p className="text-xs text-nutria-bordo/50 leading-relaxed">
+                        {card.description}
+                      </p>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ) : (
-            // Área de conversa (com mensagens)
+            /* Area de conversa */
             <div className="flex-1 overflow-auto p-6">
               <div className="max-w-3xl mx-auto">
                 <Conversation className="h-full">
@@ -244,10 +231,7 @@ function Chat() {
 
                           if (part.type === 'text') {
                             return (
-                              <Message
-                                key={`${message.id}-${i}`}
-                                from={message.role}
-                              >
+                              <Message key={`${message.id}-${i}`} from={message.role}>
                                 <MessageContent>
                                   <MessageResponse>{part.text}</MessageResponse>
                                 </MessageContent>
@@ -285,40 +269,36 @@ function Chat() {
             </div>
           )}
 
-          {/* Input Area */}
-          <div className="p-6 bg-nutria-creme">
-            <div className="max-w-4xl mx-auto">
-              {/* Botões de anexo */}
-              <div className="flex gap-2 mb-3">
-                <Button
+          {/* Input area */}
+          <div className="p-4 pb-6 bg-gradient-to-t from-nutria-creme via-nutria-creme to-transparent">
+            <div className="max-w-3xl mx-auto">
+              {/* Attachment buttons */}
+              <div className="flex gap-2 mb-2.5">
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={status === 'streaming'}
-                  className="border-nutria-verde/30 text-nutria-bordo hover:bg-white"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-nutria-bordo/50 hover:text-nutria-bordo hover:bg-white/60 transition-all duration-200 disabled:opacity-40"
                 >
-                  <Paperclip className="w-4 h-4 mr-2" />
-                  Anexar arquivo
-                </Button>
-                <Button
+                  <Paperclip className="w-3.5 h-3.5" />
+                  Arquivo
+                </button>
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={status === 'streaming'}
-                  className="border-nutria-verde/30 text-nutria-bordo hover:bg-white"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-nutria-bordo/50 hover:text-nutria-bordo hover:bg-white/60 transition-all duration-200 disabled:opacity-40"
                 >
-                  <Camera className="w-4 h-4 mr-2" />
-                  Tirar foto
-                </Button>
+                  <Camera className="w-3.5 h-3.5" />
+                  Foto
+                </button>
               </div>
 
-              {/* Input de mensagem */}
+              {/* Message input */}
               <div className="relative">
                 <PromptInput
                   onSubmit={handleSubmit}
-                  className="border-2 border-nutria-verde/30 rounded-2xl bg-white shadow-sm"
+                  className="border border-nutria-creme-dark rounded-2xl bg-white shadow-sm hover:shadow-md transition-shadow duration-300"
                 >
                   {attachments.length > 0 && (
                     <MessageAttachments className="p-3 pb-0">
@@ -331,7 +311,7 @@ function Chat() {
                       ))}
                     </MessageAttachments>
                   )}
-                  <PromptInputBody className="pr-12">
+                  <PromptInputBody>
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -342,25 +322,25 @@ function Chat() {
                     />
                     <PromptInputTextarea
                       onChange={(e) => setInput(e.target.value)}
-                      className="md:leading-10"
+                      className="pr-11 max-h-80"
                       value={input}
-                      placeholder="Digite sua mensagem sobre nutrição, receitas ou alimentação..."
+                      placeholder="Pergunte sobre nutricao, receitas ou alimentacao..."
                       disabled={status === 'streaming'}
                     />
                     <Button
                       type="submit"
                       disabled={status === 'streaming' || (!input.trim() && attachments.length === 0)}
-                      className="absolute right-3 bottom-3 bg-nutria-verde hover:bg-nutria-verde/90 text-white rounded-xl px-4"
+                      size="icon"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 bg-nutria-verde hover:bg-nutria-verde-light text-white rounded-lg transition-all duration-200 shadow-sm disabled:opacity-30"
                     >
-                      Enviar <ArrowRight className="w-4 h-4 ml-2" />
+                      <ArrowUp className="w-3.5 h-3.5" />
                     </Button>
                   </PromptInputBody>
                 </PromptInput>
               </div>
 
-              {/* Dica */}
-              <p className="text-xs text-nutria-bordo/50 text-center mt-3">
-                Dica: Você pode enviar fotos de alimentos para análise nutricional
+              <p className="text-[11px] text-nutria-bordo/30 text-center mt-3">
+                Envie fotos de alimentos para analise nutricional automatica
               </p>
             </div>
           </div>
